@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HACKER | NEURAL LINK</title>
+    <link rel="stylesheet" href="http://127.0.0.1:5050/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* Overlay for results */
+        #result-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 500;
+            justify-content: center;
+            align-items: center;
+        }
+        #result-overlay.show { display: flex; }
+
+        .result-panel {
+            width: 500px;
+            max-height: 80vh;
+            background: rgba(5, 5, 10, 0.95);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            padding: 30px;
+            overflow-y: auto;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .result-panel .rp-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        .result-panel .rp-line {
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            line-height: 1.6;
+        }
+
+        .result-panel .rp-success {
+            color: #39ff14;
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #39ff14;
+            background: rgba(57, 255, 20, 0.08);
+        }
+
+        .result-panel .rp-error {
+            color: #ff3c3c;
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ff3c3c;
+            background: rgba(255, 60, 60, 0.08);
+        }
+
+        .result-panel .rp-close {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid #00f3ff;
+            color: #00f3ff;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.3s;
+        }
+
+        .result-panel .rp-close:hover {
+            background: #00f3ff;
+            color: #000;
+        }
+
+        .rp-loading {
+            color: #00f3ff;
+            animation: blink-load 0.5s infinite;
+        }
+
+        @keyframes blink-load {
+            50% { opacity: 0.3; }
+        }
+
+        .tag-sys { color: #00f3ff; }
+        .tag-act { color: #ffcc00; }
+        .tag-ok { color: #39ff14; }
+        .tag-err { color: #ff3c3c; }
+    </style>
+</head>
+
+<body class="login-mode">
+    <canvas id="canvas3d"></canvas>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+
+    <!-- LOGIN -->
+    <div id="login-module" class="module active">
+        <div class="login-glass">
+            <div class="cyber-bracket top-left"></div>
+            <div class="cyber-bracket top-right"></div>
+            <div class="cyber-bracket bottom-left"></div>
+            <div class="cyber-bracket bottom-right"></div>
+            <header>
+                <h1 class="glitch-title" data-text="HACKER">HACKER</h1>
+                <div class="pulse-line"></div>
+                <p class="system-tag">NEURAL LINK v4.0.5</p>
+            </header>
+            <form id="login-form">
+                <div class="input-container">
+                    <span class="label">ID://</span>
+                    <input type="text" id="user-input" placeholder="IDENTITY" required autocomplete="off">
+                </div>
+                <div class="input-container">
+                    <span class="label">KEY://</span>
+                    <input type="password" id="pass-input" placeholder="PASSCODE" required>
+                </div>
+                <button type="submit" class="prime-btn">
+                    <span class="btn-text">ESTABLISH CONNECTION</span>
+                    <span class="btn-progress"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dash-module" class="module">
+        <nav class="glass-nav">
+            <div class="brand">
+                <span class="pulse-dot"></span>
+                HACKER_OS/CENTRAL
+            </div>
+            <div class="stats">
+                <div class="stat-item">MEM: <span id="mem-usage">24%</span></div>
+                <div class="stat-item" id="server-status"><span style="color:#ffcc00;">● CHECKING...</span></div>
+                <div class="stat-item" id="clock">00:00:00</div>
+            </div>
+        </nav>
+
+        <main class="grid-layout single-panel">
+            <div class="panel-right">
+                <div class="action-grid">
+                    <div class="node-card red" id="btn-optimize">
+                        <div class="node-icon">🎯</div>
+                        <div class="node-info">
+                            <h4>MOUSE AIM OPTIMIZER</h4>
+                            <p>Disable Acceleration & Raw Input</p>
+                        </div>
+                    </div>
+                    <div class="node-card blue" id="btn-pc-optimize">
+                        <div class="node-icon">⚙️</div>
+                        <div class="node-info">
+                            <h4>PC OPTIMIZATION</h4>
+                            <p>GPU, Network, CPU, Memory Tweaks</p>
+                        </div>
+                    </div>
+                    <div class="node-card green" id="btn-restore">
+                        <div class="node-icon">🔄</div>
+                        <div class="node-info">
+                            <h4>RESTORE MOUSE</h4>
+                            <p>Revert Mouse to Default</p>
+                        </div>
+                    </div>
+                    <div class="node-card cyan" id="btn-pc-restore">
+                        <div class="node-icon">🔙</div>
+                        <div class="node-info">
+                            <h4>RESTORE PC DEFAULTS</h4>
+                            <p>Revert All PC Tweaks</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- RESULT OVERLAY -->
+    <div id="result-overlay">
+        <div class="result-panel">
+            <div class="rp-title" id="rp-title" style="color: #00f3ff;">PROCESSING</div>
+            <div id="rp-log"></div>
+            <button class="rp-close" id="rp-close" style="display:none;" onclick="document.getElementById('result-overlay').classList.remove('show')">CLOSE</button>
+        </div>
+    </div>
+
+    <div id="login-error" class="hidden">[ ERROR ] INCORRECT CREDENTIALS</div>
+    <script src="http://127.0.0.1:5050/script.js"></script>
+
+    <script>
+        const SERVER = 'http://127.0.0.1:5050';
+        const overlay = document.getElementById('result-overlay');
+        const rpTitle = document.getElementById('rp-title');
+        const rpLog = document.getElementById('rp-log');
+        const rpClose = document.getElementById('rp-close');
+
+        // --- SERVER STATUS CHECK ---
+        let serverOnline = false;
+
+        // Warn if opened as file:// instead of through server
+        if (window.location.protocol === 'file:') {
+            alert('⚠️ You opened this file directly!\n\nYou MUST access it through the server:\n\n1. Run run_server.bat as Administrator\n2. Open http://127.0.0.1:5050 in your browser\n\nDo NOT open index.html directly.');
+        }
+
+        async function checkServerStatus() {
+            try {
+                const res = await fetch(SERVER + '/health', { method: 'GET', signal: AbortSignal.timeout(3000) });
+                if (res.ok) {
+                    serverOnline = true;
+                    document.getElementById('server-status').innerHTML = '<span style="color:#39ff14;">● ONLINE</span>';
+                } else {
+                    throw new Error('not ok');
+                }
+            } catch (e) {
+                serverOnline = false;
+                document.getElementById('server-status').innerHTML = '<span style="color:#ff3c3c;">● OFFLINE</span>';
+            }
+        }
+        // Check immediately and every 5 seconds
+        checkServerStatus();
+        setInterval(checkServerStatus, 5000);
+
+        function addLog(tag, text, cls) {
+            const line = document.createElement('div');
+            line.className = 'rp-line';
+            line.innerHTML = `<span class="${cls}">[${tag}]</span> ${text}`;
+            rpLog.appendChild(line);
+        }
+
+        async function runAction(type) {
+            // Reset overlay
+            rpLog.innerHTML = '';
+            rpClose.style.display = 'none';
+            rpTitle.style.color = '#00f3ff';
+            overlay.classList.add('show');
+
+            const endpoints = {
+                'aim': '/run-optimizer',
+                'restore': '/restore-defaults',
+                'pc-optimize': '/pc-optimize',
+                'pc-restore': '/pc-restore'
+            };
+            const titles = {
+                'aim': 'MOUSE AIM OPTIMIZER',
+                'restore': 'MOUSE RESTORE',
+                'pc-optimize': 'PC OPTIMIZATION',
+                'pc-restore': 'PC RESTORE'
+            };
+            const endpoint = endpoints[type];
+            rpTitle.innerText = titles[type];
+
+            const allSteps = {
+                'aim': [
+                    ['SYSTEM', 'Connecting to Windows kernel...'],
+                    ['SYSTEM', 'Reading mouse registry...'],
+                    ['ACTION', 'Setting MouseSpeed = 0'],
+                    ['ACTION', 'Setting MouseThreshold1 = 0'],
+                    ['ACTION', 'Setting MouseThreshold2 = 0'],
+                    ['ACTION', 'Setting MouseSensitivity = 10 (RAW 1:1)'],
+                    ['SYSTEM', 'Calling SystemParametersInfo(SPI_SETMOUSE)...'],
+                    ['ACTION', 'Disabling Enhance Pointer Precision...'],
+                    ['ACTION', 'Switching to High Performance power plan...'],
+                ],
+                'restore': [
+                    ['SYSTEM', 'Initiating mouse restore...'],
+                    ['ACTION', 'Restoring MouseSpeed = 1'],
+                    ['ACTION', 'Restoring MouseThreshold1 = 6'],
+                    ['ACTION', 'Restoring MouseThreshold2 = 10'],
+                    ['SYSTEM', 'Calling SystemParametersInfo(SPI_SETMOUSE)...'],
+                    ['ACTION', 'Restoring Balanced power plan...'],
+                ],
+                'pc-optimize': [
+                    ['SYSTEM', 'Initializing full PC optimization...'],
+                    ['ACTION', 'Disabling visual effects & transparency...'],
+                    ['ACTION', 'Disabling Nagle algorithm (TCP_NODELAY)...'],
+                    ['ACTION', 'Removing network throttling...'],
+                    ['ACTION', 'Disabling fullscreen optimizations...'],
+                    ['ACTION', 'Disabling Game DVR & Game Bar...'],
+                    ['ACTION', 'Enabling HW GPU scheduling...'],
+                    ['ACTION', 'Disabling background apps & telemetry...'],
+                    ['ACTION', 'Setting CPU game priority = HIGH...'],
+                    ['ACTION', 'Stopping SysMain & WSearch services...'],
+                    ['ACTION', 'Applying High Performance power plan...'],
+                    ['ACTION', 'Disabling USB selective suspend...'],
+                    ['ACTION', 'Stopping Print Spooler & Fax...'],
+                    ['SYSTEM', 'Launching optimization CMD...'],
+                ],
+                'pc-restore': [
+                    ['SYSTEM', 'Initializing PC restore...'],
+                    ['ACTION', 'Restoring visual effects...'],
+                    ['ACTION', 'Restoring network defaults...'],
+                    ['ACTION', 'Restoring GPU & Game settings...'],
+                    ['ACTION', 'Re-enabling background apps...'],
+                    ['ACTION', 'Restoring CPU priority...'],
+                    ['ACTION', 'Restarting SysMain & WSearch...'],
+                    ['ACTION', 'Restoring Balanced power plan...'],
+                    ['ACTION', 'Restoring services...'],
+                    ['SYSTEM', 'Launching restore CMD...'],
+                ]
+            };
+            const steps = allSteps[type];
+
+            for (const [tag, text] of steps) {
+                const cls = tag === 'SYSTEM' ? 'tag-sys' : 'tag-act';
+                addLog(tag, text, cls);
+                await new Promise(r => setTimeout(r, 150 + Math.random() * 200));
+            }
+
+            addLog('SYSTEM', 'Sending commands to backend...', 'tag-sys');
+
+            // Pre-check: is server reachable?
+            if (!serverOnline) {
+                await checkServerStatus();
+            }
+
+            if (!serverOnline) {
+                addLog('ERROR', 'Server is not running on ' + SERVER, 'tag-err');
+                if (window.location.protocol === 'file:') {
+                    addLog('ERROR', 'You opened this page as a FILE — open http://127.0.0.1:5050 instead!', 'tag-err');
+                } else {
+                    addLog('ERROR', 'Run this command as Administrator: python server.py', 'tag-err');
+                }
+                const box = document.createElement('div');
+                box.className = 'rp-error';
+                box.innerHTML = window.location.protocol === 'file:'
+                    ? '<strong>WRONG ACCESS METHOD</strong><br>1. Run <code>run_server.bat</code> as Admin<br>2. Open <code>http://127.0.0.1:5050</code> in browser<br>3. Do NOT open index.html directly'
+                    : '<strong>SERVER OFFLINE</strong><br>1. Open CMD as Administrator<br>2. Run: <code>cd ' + SERVER.replace('http://127.0.0.1:5050','g:\\sensi') + '</code><br>3. Run: <code>python server.py</code>';
+                rpLog.appendChild(box);
+                rpTitle.style.color = '#ff3c3c';
+                rpTitle.innerText = 'OFFLINE';
+                rpClose.style.display = 'block';
+                return;
+            }
+
+            // Actually call the server
+            try {
+                const res = await fetch(SERVER + endpoint, { method: 'POST' });
+                const data = await res.json();
+
+                if (res.ok) {
+                    addLog('SUCCESS', data.message, 'tag-ok');
+
+                    if (data.before && data.after) {
+                        addLog('INFO', `BEFORE: Speed=${data.before.MouseSpeed} T1=${data.before.MouseThreshold1} T2=${data.before.MouseThreshold2}`, 'tag-sys');
+                        addLog('INFO', `AFTER:  Speed=${data.after.MouseSpeed} T1=${data.after.MouseThreshold1} T2=${data.after.MouseThreshold2}`, 'tag-sys');
+                    } else if (data.after) {
+                        addLog('INFO', `NOW: Speed=${data.after.MouseSpeed} T1=${data.after.MouseThreshold1} T2=${data.after.MouseThreshold2}`, 'tag-sys');
+                    }
+
+                    const box = document.createElement('div');
+                    box.className = 'rp-success';
+                    const successMsgs = {
+                        'aim': '<strong>MOUSE OPTIMIZATION COMPLETE</strong><br>0 acceleration | 0 latency | raw input active',
+                        'restore': '<strong>MOUSE RESTORE COMPLETE</strong><br>Mouse settings reverted to defaults',
+                        'pc-optimize': '<strong>PC OPTIMIZATION COMPLETE</strong><br>GPU, Network, CPU, Memory all optimized — check the CMD window',
+                        'pc-restore': '<strong>PC RESTORE COMPLETE</strong><br>All PC tweaks reverted — check the CMD window'
+                    };
+                    box.innerHTML = successMsgs[type] || '<strong>COMPLETE</strong>';
+                    rpLog.appendChild(box);
+
+                    rpTitle.style.color = '#39ff14';
+                    rpTitle.innerText = (type === 'aim' || type === 'pc-optimize') ? 'OPTIMIZED' : 'RESTORED';
+                } else {
+                    addLog('ERROR', data.message || 'Unknown server error', 'tag-err');
+                    const box = document.createElement('div');
+                    box.className = 'rp-error';
+                    box.innerHTML = '<strong>OPERATION FAILED</strong><br>Run optimize.exe as Administrator and try again.';
+                    rpLog.appendChild(box);
+
+                    rpTitle.style.color = '#ff3c3c';
+                    rpTitle.innerText = 'FAILED';
+                }
+            } catch (e) {
+                addLog('ERROR', 'Cannot reach server at ' + SERVER, 'tag-err');
+                addLog('ERROR', 'Server may have crashed — restart with: python server.py', 'tag-err');
+                const box = document.createElement('div');
+                box.className = 'rp-error';
+                box.innerHTML = '<strong>SERVER OFFLINE</strong><br>The server stopped responding. Restart it as Administrator and try again.';
+                rpLog.appendChild(box);
+
+                rpTitle.style.color = '#ff3c3c';
+                rpTitle.innerText = 'OFFLINE';
+                serverOnline = false;
+                document.getElementById('server-status').innerHTML = '<span style="color:#ff3c3c;">● OFFLINE</span>';
+            }
+
+            rpClose.style.display = 'block';
+        }
+
+        document.getElementById('btn-optimize').addEventListener('click', () => runAction('aim'));
+        document.getElementById('btn-restore').addEventListener('click', () => runAction('restore'));
+        document.getElementById('btn-pc-optimize').addEventListener('click', () => runAction('pc-optimize'));
+        document.getElementById('btn-pc-restore').addEventListener('click', () => runAction('pc-restore'));
+    </script>
+</body>
+
+</html>
