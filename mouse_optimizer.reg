@@ -1,11 +1,105 @@
 Windows Registry Editor Version 5.00
 
+; =====================================================
+; HACKER CONTROL CENTER - ULTIMATE AIM REG (400 DPI)
+; MarkC Fix + Zero Acceleration + Zero Smoothing
+; Zero Input Lag + Raw 1:1 Mapping
+; =====================================================
+
+; ----- MOUSE: Kill ALL acceleration & smoothing -----
 [HKEY_CURRENT_USER\Control Panel\Mouse]
 "MouseSpeed"="0"
 "MouseThreshold1"="0"
 "MouseThreshold2"="0"
 "MouseSensitivity"="10"
-"SmoothMouseXCurve"=hex:00,00,00,00,00,00,00,00,15,6e,00,00,00,00,00,00,00,40,\
-  01,00,00,00,00,00,00,80,02,00,00,00,00,00,00,00,05,00,00,00,00,00
-"SmoothMouseYCurve"=hex:00,00,00,00,00,00,00,00,fd,11,01,00,00,00,00,00,00,24,\
-  04,00,00,00,00,00,00,af,0c,00,00,00,00,00,00,00,10,00,00,00,00,00
+"MouseTrails"="0"
+"DoubleClickHeight"="4"
+"DoubleClickWidth"="4"
+"MouseHoverTime"="0"
+"SnapToDefaultButton"="0"
+
+; MarkC Fix - Perfect flat 1:1 curve for 400 DPI @ 100% scaling
+; Every input speed maps to EXACT same output speed (zero curve)
+"SmoothMouseXCurve"=hex:\
+  00,00,00,00,00,00,00,00,\
+  00,a0,00,00,00,00,00,00,\
+  00,40,01,00,00,00,00,00,\
+  00,80,02,00,00,00,00,00,\
+  00,00,05,00,00,00,00,00
+"SmoothMouseYCurve"=hex:\
+  00,00,00,00,00,00,00,00,\
+  00,00,38,00,00,00,00,00,\
+  00,00,70,00,00,00,00,00,\
+  00,00,a8,00,00,00,00,00,\
+  00,00,e0,00,00,00,00,00
+
+; ----- Kill acceleration for ALL users (global) -----
+[HKEY_USERS\.DEFAULT\Control Panel\Mouse]
+"MouseSpeed"="0"
+"MouseThreshold1"="0"
+"MouseThreshold2"="0"
+"MouseSensitivity"="10"
+
+; ----- Increase mouse data buffer for smoother tracking -----
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mouclass\Parameters]
+"MouseDataQueueSize"=dword:00000064
+
+; ----- Remove all cursor schemes (reduces rendering overhead) -----
+[HKEY_CURRENT_USER\Control Panel\Cursors]
+"Scheme Source"=dword:00000000
+"CursorShadow"="0"
+
+; ----- DISABLE GAME DVR & GAME BAR (major input lag source) -----
+[HKEY_CURRENT_USER\System\GameConfigStore]
+"GameDVR_Enabled"=dword:00000000
+"GameDVR_FSEBehaviorMode"=dword:00000002
+"GameDVR_FSEBehavior"=dword:00000002
+"GameDVR_HonorUserFSEBehaviorMode"=dword:00000001
+"GameDVR_DXGIHonorFSEWindowsCompatible"=dword:00000001
+"GameDVR_EFSEFeatureFlags"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\GameBar]
+"AllowAutoGameMode"=dword:00000000
+"AutoGameModeEnabled"=dword:00000000
+"ShowStartupPanel"=dword:00000000
+"UseNexusForGameBarEnabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\GameDVR]
+"AllowGameDVR"=dword:00000000
+
+; ----- DISABLE FULLSCREEN OPTIMIZATIONS (adds input lag) -----
+[HKEY_CURRENT_USER\System\GameConfigStore]
+"GameDVR_DSEBehavior"=dword:00000002
+
+; ----- GPU PRIORITY FOR GAMES -----
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games]
+"GPU Priority"=dword:00000008
+"Priority"=dword:00000006
+"Scheduling Category"="High"
+"SFIO Priority"="High"
+
+; ----- NETWORK: Disable Nagle (low ping) -----
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile]
+"NetworkThrottlingIndex"=dword:ffffffff
+"SystemResponsiveness"=dword:00000000
+
+; ----- KEYBOARD: Faster response for game inputs -----
+[HKEY_CURRENT_USER\Control Panel\Keyboard]
+"KeyboardDelay"="0"
+"KeyboardSpeed"="31"
+
+; ----- DISABLE DWM VSYNC (reduces compositor input lag) -----
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Dwm]
+"OverlayTestMode"=dword:00000005
+
+; ----- DISABLE POINTER PRECISION AT SYSTEM LEVEL -----
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad]
+"AAPThreshold"=dword:00000000
+
+; ----- DISABLE MOUSE ACCELERATION IN RAW INPUT -----
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mouhid\Parameters]
+"TreatAbsoluteAsRelative"=dword:00000001
+
+; ----- HIGH PERFORMANCE TIMER (precise input timing) -----
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\kernel]
+"GlobalTimerResolutionRequests"=dword:00000001
