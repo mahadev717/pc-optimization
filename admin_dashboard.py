@@ -212,7 +212,7 @@ DASHBOARD_HTML = r'''<!DOCTYPE html>
   <div class="sec-label">REGISTERED USERS</div>
   <div class="tbl-wrap">
     <table>
-      <thead><tr><th>#</th><th>USERNAME</th><th>PASSWORD</th><th style="text-align:center">LOGINS</th><th>LAST LOGIN</th><th>REGISTERED</th></tr></thead>
+      <thead><tr><th>#</th><th>USERNAME</th><th>PASSWORD</th><th style="text-align:center">LOGINS</th><th>LAST LOGIN</th><th>REGISTERED</th><th>ACTION</th></tr></thead>
       <tbody id="users-body"></tbody>
     </table>
   </div>
@@ -272,6 +272,7 @@ DASHBOARD_HTML = r'''<!DOCTYPE html>
         '<td class="t-cnt">' + esc(u.login_count) + '</td>' +
         '<td class="t-time">' + esc(u.last_login || '-') + '</td>' +
         '<td style="color:rgba(0,243,255,.4);font-size:.62rem">' + esc(u.created_at || '-') + '</td>' +
+        '<td><button class="del-btn" style="padding:4px 8px;font-size:0.55rem;border-color:var(--orange);color:var(--orange)" onclick="changePassword(\'' + esc(u.id) + '\', \'' + esc(u.username) + '\')">CHANGE PASS</button></td>' +
       '</tr>';
     }
     body.innerHTML = html;
@@ -296,6 +297,19 @@ DASHBOARD_HTML = r'''<!DOCTYPE html>
         '<td class="t-time">'+esc(l.logged_at)+'</td></tr>';
     }
     body.innerHTML = html;
+  }
+
+  function changePassword(id, username) {
+    var newPass = prompt('Enter new password for ' + username + ':');
+    if (!newPass) return;
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/update-password', true);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.onload = function() {
+       if(x.status === 200) { alert('Password updated successfully for ' + username + '. They must use this new password next time they login.'); loadData(); }
+       else { alert('Error updating password.'); }
+    };
+    x.send(JSON.stringify({id: id, password: newPass}));
   }
 
   function clearAll() {
@@ -434,6 +448,30 @@ class AdminHandler(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+
+        elif self.path == "/api/update-password":
+            if not self._is_auth():
+                self.send_response(401)
+                self.end_headers()
+                return
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length).decode("utf-8")
+            import json
+            try:
+                data = json.loads(body)
+                u_id = data.get("id")
+                new_pass = data.get("password")
+                if u_id and new_pass and supabase:
+                    supabase.table("users").update({"password": new_pass}).eq("id", u_id).execute()
+                res = b'{"status":"ok"}'
+            except Exception as e:
+                res = json.dumps({"status": "error", "message": str(e)}).encode("utf-8")
+            
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(res)))
+            self.end_headers()
+            self.wfile.write(res)
         else:
             self.send_error(404)
 
