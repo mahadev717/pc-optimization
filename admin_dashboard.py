@@ -228,7 +228,7 @@ DASHBOARD_HTML = r'''<!DOCTYPE html>
     <div class="stat-card"><div class="val" id="s-mobile">-</div><div class="lbl">MOBILE LOGINS</div></div>
   </div>
 
-  <div class="sec-label">REGISTERED USERS</div>
+  <div class="sec-label">ACTIVE LOGGED-IN USERS</div>
   <div class="tbl-wrap">
     <table>
       <thead><tr><th>#</th><th>USERNAME</th><th>PASSWORD</th><th style="text-align:center">LOGINS</th><th>LAST LOGIN</th><th>REGISTERED</th><th>ACTION</th></tr></thead>
@@ -278,8 +278,8 @@ DASHBOARD_HTML = r'''<!DOCTYPE html>
 
   function renderUsers() {
     var body = document.getElementById('users-body');
-    var users = DATA.users;
-    if (!users.length) { body.innerHTML = '<tr><td colspan="6" class="no-data">[ NO USERS ]</td></tr>'; return; }
+    var users = DATA.users.filter(function(u) { return u.is_active; });
+    if (!users.length) { body.innerHTML = '<tr><td colspan="7" class="no-data">[ NO ACTIVE USERS LOGGED IN ]</td></tr>'; return; }
     var today = new Date().toISOString().slice(0,10);
     var html = '';
     for (var i=0; i<users.length; i++) {
@@ -287,7 +287,7 @@ DASHBOARD_HTML = r'''<!DOCTYPE html>
       var isNew = u.last_login && u.last_login.indexOf(today) === 0;
       html += '<tr>' +
         '<td class="t-id">' + esc(u.id) + '</td>' +
-        '<td class="t-user">' + esc(u.username) + (u.is_active ? '<span class="new-badge" style="background:var(--orange);">ACTIVE NOW</span>' : (isNew ? '<span class="new-badge">ONLINE TODAY</span>' : '')) + '</td>' +
+        '<td class="t-user">' + esc(u.username) + '<span class="new-badge" style="background:var(--orange);">ACTIVE NOW</span></td>' +
         '<td style="color:var(--orange)">' + esc(u.password || '***') + '</td>' +
         '<td class="t-cnt">' + esc(u.login_count) + '</td>' +
         '<td class="t-time">' + esc(u.last_login || '-') + '</td>' +
