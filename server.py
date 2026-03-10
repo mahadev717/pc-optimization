@@ -1782,17 +1782,18 @@ def health():
         "status": "online",
         "mem_percent": mem_percent,
         "local_ip": get_local_ip(),
-        "port": 5050
+        "port": app.config.get('SERVER_PORT', 5050)
     })
 
 
 @app.route('/network-info')
 def network_info():
     ip = get_local_ip()
+    port = app.config.get('SERVER_PORT', 5050)
     return jsonify({
         "local_ip": ip,
-        "port": 5050,
-        "mobile_url": f"http://{ip}:5050"
+        "port": port,
+        "mobile_url": f"http://{ip}:{port}"
     })
 
 
@@ -1937,28 +1938,33 @@ if __name__ == '__main__':
     import socket
     init_db()
 
-    # Check port availability
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    result = sock.connect_ex(('127.0.0.1', 5050))
-    sock.close()
-    if result == 0:
-        print("!!! ERROR: Port 5050 is already in use !!!")
-        input("Press Enter to try starting anyway...")
+    # Find open port automatically (allows multiple instances to run at once)
+    current_port = 5050
+    while True:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(('127.0.0.1', current_port))
+        sock.close()
+        if result != 0:
+            break
+        current_port += 1
 
-    # Open Windows Firewall for port 5050 so phones on same WiFi can connect
+    app.config['SERVER_PORT'] = current_port
+
+    # Open Windows Firewall for this specific port so phones on same WiFi can connect
+    # (If multiple instances run, firewall opens for the first one that successfully runs this command)
     run_silent(["netsh", "advfirewall", "firewall", "delete", "rule",
-                "name=HackerControlCenter"])
+                f"name=HackerControlCenter_{current_port}"])
     run_silent(["netsh", "advfirewall", "firewall", "add", "rule",
-                "name=HackerControlCenter", "dir=in", "action=allow",
-                "protocol=TCP", "localport=5050"])
+                f"name=HackerControlCenter_{current_port}", "dir=in", "action=allow",
+                "protocol=TCP", f"localport={current_port}"])
 
     local_ip = get_local_ip()
 
     print("=========================================")
     print("   HACKER CONTROL CENTER v6.0            ")
     print("   BLUESTACKS BEAST MODE EDITION         ")
-    print(f"   PC:     http://127.0.0.1:5050        ")
-    print(f"   MOBILE: http://{local_ip}:5050       ")
+    print(f"   PC:     http://127.0.0.1:{current_port}     ")
+    print(f"   MOBILE: http://{local_ip}:{current_port}    ")
     print("   Connect phone to same WiFi, open URL  ")
     print("   4GB RAM | iGPU | Free Fire 300+ FPS   ")
     print("=========================================")
@@ -1968,9 +1974,10 @@ if __name__ == '__main__':
     import webbrowser
     def wait_and_open():
         input("\n   >>> PRESS [ENTER] TO OPEN MENU IN BROWSER <<<\n")
-        webbrowser.open("http://127.0.0.1:5050")
+        webbrowser.open(f"http://127.0.0.1:{current_port}")
     threading.Thread(target=wait_and_open, daemon=True).start()
 
     # Bind to 0.0.0.0 so ALL network interfaces can reach the server
     # (localhost AND your phone on the same WiFi)
-    app.run(host='0.0.0.0', port=5050, debug=False)
+    app.run(host='0.0.0.0', port=current_port, debug=False, threaded=True)
+

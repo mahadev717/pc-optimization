@@ -480,7 +480,7 @@ class AdminHandler(http.server.BaseHTTPRequestHandler):
 
 
 def main():
-    server = http.server.HTTPServer(("0.0.0.0", PORT), AdminHandler)
+    server = http.server.ThreadingHTTPServer(("0.0.0.0", PORT), AdminHandler)
     print(f"Admin Dashboard running on:")
     print(f"  - Local:   http://127.0.0.1:{PORT}")
     print(f"  - Network: http://{LOCAL_IP}:{PORT}")
