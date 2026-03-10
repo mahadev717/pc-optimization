@@ -68,6 +68,23 @@ def get_all_data():
         users = users_res.data or []
         all_logins = logins_res.data or []
         enriched = []
+        
+        active_count = 0
+        active_usernames = set()
+        try:
+            act_res = supabase.table("active_sessions").select("*").execute()
+            now = datetime.datetime.now()
+            for row in (act_res.data or []):
+                try:
+                    last_act = datetime.datetime.strptime(row["last_active"], "%Y-%m-%d %H:%M:%S")
+                    if (now - last_act).total_seconds() <= 30:
+                        active_usernames.add(row["username"])
+                except Exception:
+                    pass
+            active_count = len(active_usernames)
+        except Exception:
+            pass
+
         for u in users:
             uname = u["username"]
             u_logins = [l for l in all_logins if l.get("username") == uname]
@@ -76,9 +93,10 @@ def get_all_data():
                 "id": str(u["id"]), "username": str(u["username"]),
                 "created_at": str(u["created_at"]),
                 "login_count": str(len(u_logins)), "last_login": str(last),
+                "is_active": (uname in active_usernames),
                 "login_history": u_logins,
             })
-        return {"users": enriched, "all_logins": all_logins}
+        return {"users": enriched, "all_logins": all_logins, "active_count": active_count}
     except Exception as e:
         return {"users": [], "all_logins": [], "error": str(e)}
 
@@ -206,6 +224,7 @@ DASHBOARD_HTML = r'''<!DOCTYPE html>
     <div class="stat-card"><div class="val" id="s-users">-</div><div class="lbl">REGISTERED USERS</div></div>
     <div class="stat-card"><div class="val" id="s-total">-</div><div class="lbl">TOTAL LOGINS</div></div>
     <div class="stat-card"><div class="val" id="s-today">-</div><div class="lbl">TODAY</div></div>
+    <div class="stat-card" style="border-color:rgba(255,136,0,0.5);"><div class="val" id="s-active" style="color:var(--orange)">-</div><div class="lbl" style="color:var(--orange)">ACTIVE SESSIONS</div></div>
     <div class="stat-card"><div class="val" id="s-mobile">-</div><div class="lbl">MOBILE LOGINS</div></div>
   </div>
 
@@ -254,6 +273,7 @@ DASHBOARD_HTML = r'''<!DOCTYPE html>
     var today = new Date().toISOString().slice(0,10);
     document.getElementById('s-today').innerText  = DATA.all_logins.filter(function(l){ return l.logged_at && l.logged_at.startsWith(today); }).length;
     document.getElementById('s-mobile').innerText = DATA.all_logins.filter(function(l){ return l.device && l.device.toLowerCase().startsWith('mobile'); }).length;
+    if (DATA.active_count !== undefined) { document.getElementById('s-active').innerText = DATA.active_count + ' USERS'; }
   }
 
   function renderUsers() {
@@ -267,7 +287,7 @@ DASHBOARD_HTML = r'''<!DOCTYPE html>
       var isNew = u.last_login && u.last_login.indexOf(today) === 0;
       html += '<tr>' +
         '<td class="t-id">' + esc(u.id) + '</td>' +
-        '<td class="t-user">' + esc(u.username) + (isNew ? '<span class="new-badge">ONLINE TODAY</span>' : '') + '</td>' +
+        '<td class="t-user">' + esc(u.username) + (u.is_active ? '<span class="new-badge" style="background:var(--orange);">ACTIVE NOW</span>' : (isNew ? '<span class="new-badge">ONLINE TODAY</span>' : '')) + '</td>' +
         '<td style="color:var(--orange)">' + esc(u.password || '***') + '</td>' +
         '<td class="t-cnt">' + esc(u.login_count) + '</td>' +
         '<td class="t-time">' + esc(u.last_login || '-') + '</td>' +

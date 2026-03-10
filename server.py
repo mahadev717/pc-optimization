@@ -1437,6 +1437,17 @@ HTML_PAGE = r'''<!DOCTYPE html>
         if (_pEl) { _pEl.value = ''; _pEl.addEventListener('input', function(){ _pTouched = true; }); }
         setTimeout(function(){ if(!_uTouched && _uEl) _uEl.value = ''; if(!_pTouched && _pEl) _pEl.value = ''; }, 300);
 
+        let CURRENT_USER = '';
+        setInterval(() => {
+            if (CURRENT_USER) {
+                fetch('/api/ping', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: CURRENT_USER})
+                }).catch(e=>{});
+            }
+        }, 10000);
+
         // LOGIN
         const loginForm = document.getElementById('login-form');
         loginForm.addEventListener('submit', async (e) => {
@@ -1450,6 +1461,7 @@ HTML_PAGE = r'''<!DOCTYPE html>
                     body: JSON.stringify({username: user, password: pass})
                 });
                 if (r.ok) {
+                    CURRENT_USER = user;
                     const lm = document.getElementById('login-module');
                     const dm = document.getElementById('dash-module');
                     lm.classList.add('fade-out');
@@ -1813,6 +1825,19 @@ def login():
         record_login(username, ip, ua)
         return jsonify({"status": "ok"})
     return jsonify({"status": "fail"}), 401
+
+
+@app.route('/api/ping', methods=['POST'])
+def api_ping():
+    data = request.get_json(silent=True) or {}
+    username = str(data.get('username', '')).strip()
+    if username:
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            supabase.table('active_sessions').upsert({"username": username, "last_active": now}).execute()
+        except:
+            pass
+    return jsonify({"status": "ok"})
 
 
 @app.route('/admin-update-user', methods=['POST'])

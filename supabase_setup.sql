@@ -34,4 +34,12 @@ ALTER TABLE logins ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all on users"  ON users  FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on logins" ON logins FOR ALL USING (true) WITH CHECK (true);
 
+-- 5. ACTIVE SESSIONS TABLE
+CREATE TABLE IF NOT EXISTS active_sessions (
+    username   TEXT PRIMARY KEY,
+    last_active TEXT NOT NULL
+);
+ALTER TABLE active_sessions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all on active_sessions" ON active_sessions FOR ALL USING (true) WITH CHECK (true);
+
 -- Done! Your tables are ready.
