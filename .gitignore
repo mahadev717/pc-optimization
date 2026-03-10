@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+testsrv.log
+build/
+*.spec
+logins.db
