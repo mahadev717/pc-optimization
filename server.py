@@ -1963,6 +1963,14 @@ if __name__ == '__main__':
     print("   4GB RAM | iGPU | Free Fire 300+ FPS   ")
     print("=========================================")
 
+    # Background thread to wait for 'Enter' and open browser
+    import threading
+    import webbrowser
+    def wait_and_open():
+        input("\n   >>> PRESS [ENTER] TO OPEN MENU IN BROWSER <<<\n")
+        webbrowser.open("http://127.0.0.1:5050")
+    threading.Thread(target=wait_and_open, daemon=True).start()
+
     # Bind to 0.0.0.0 so ALL network interfaces can reach the server
     # (localhost AND your phone on the same WiFi)
     app.run(host='0.0.0.0', port=5050, debug=False)
